@@ -22,9 +22,7 @@ module Rapns
 
       def initialize(i)
         @name = "DeliveryHandler #{i}"
-        host = Rapns::Daemon.configuration.push.host
-        port = Rapns::Daemon.configuration.push.port
-        @connection = Connection.new(@name, host, port)
+        @connections = {}
       end
 
       def start
@@ -47,8 +45,8 @@ module Rapns
 
       def deliver(notification)
         begin
-          @connection.write(notification.to_binary)
-          check_for_error
+          connection = connection_for_certificate(notification.certificate)
+          check_for_error(connection)
 
           with_database_reconnect_and_retry do
             notification.delivered = true
@@ -75,11 +73,11 @@ module Rapns
         end
       end
 
-      def check_for_error
-        if @connection.select(SELECT_TIMEOUT)
+      def check_for_error(connection)
+        if connection.select(SELECT_TIMEOUT)
           error = nil
 
-          if tuple = @connection.read(ERROR_TUPLE_BYTES)
+          if tuple = connection.read(ERROR_TUPLE_BYTES)
             cmd, code, notification_id = tuple.unpack("ccN")
 
             description = APN_ERRORS[code.to_i] || "Unknown error. Possible rapns bug?"
@@ -90,7 +88,7 @@ module Rapns
 
           begin
             Rapns::Daemon.logger.error("[#{@name}] Error received, reconnecting...")
-            @connection.reconnect
+            connection.reconnect
           ensure
             raise error if error
           end
@@ -101,7 +99,7 @@ module Rapns
         notification = Rapns::Daemon.delivery_queue.pop
 
         if notification == STOP
-          @connection.close
+          @connections.each { |c| c.close }
           return
         end
 
@@ -112,6 +110,15 @@ module Rapns
         ensure
           Rapns::Daemon.delivery_queue.notification_processed
         end
+      end
+      
+      def connection_for_certificate(certificate)
+        certificate ||= Rapns::Daemon.configuration.certificate
+        if @connections[certificate].nil?
+          @connections[certificate] = Connection.new(@name, Rapns::Daemon.configuration.push.host, Rapns::Daemon.configuration.push.port, certificate)
+          @connections[certificate].connect
+        end
+        @connections[certificate]
       end
     end
   end

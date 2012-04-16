@@ -34,9 +34,6 @@ module Rapns
 
       self.logger = Logger.new(:foreground => foreground, :airbrake_notify => configuration.airbrake_notify)
 
-      self.certificate = Certificate.new(configuration.certificate)
-      certificate.load
-
       self.delivery_queue = DeliveryQueue.new
 
       daemonize unless foreground?

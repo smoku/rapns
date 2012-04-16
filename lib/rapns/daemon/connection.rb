@@ -3,10 +3,12 @@ module Rapns
     class ConnectionError < StandardError; end
 
     class Connection
-      def initialize(name, host, port)
+      def initialize(name, host, port, certificate)
         @name = name
         @host = host
         @port = port
+        @certificate = Certificate.new(certificate)
+        @certificate.load
       end
 
       def connect
@@ -66,8 +68,8 @@ module Rapns
 
       def setup_ssl_context
         ssl_context = OpenSSL::SSL::SSLContext.new
-        ssl_context.key = OpenSSL::PKey::RSA.new(Rapns::Daemon.certificate.certificate, Rapns::Daemon.configuration.certificate_password)
-        ssl_context.cert = OpenSSL::X509::Certificate.new(Rapns::Daemon.certificate.certificate)
+        ssl_context.key = OpenSSL::PKey::RSA.new(@certificate.certificate, Rapns::Daemon.configuration.certificate_password)
+        ssl_context.cert = OpenSSL::X509::Certificate.new(@certificate.certificate)
         ssl_context
       end
 
