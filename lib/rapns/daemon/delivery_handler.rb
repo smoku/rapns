@@ -26,8 +26,6 @@ module Rapns
       end
 
       def start
-        @connection.connect
-
         Thread.new do
           loop do
             break if @stop

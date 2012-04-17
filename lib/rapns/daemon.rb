@@ -45,7 +45,7 @@ module Rapns
 
       logger.info('Ready')
 
-      FeedbackReceiver.start
+      #FeedbackReceiver.start
       Feeder.start(foreground?)
     end
 

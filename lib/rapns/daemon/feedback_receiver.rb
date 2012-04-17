@@ -26,7 +26,8 @@ module Rapns
         begin
           host = Rapns::Daemon.configuration.feedback.host
           port = Rapns::Daemon.configuration.feedback.port
-          connection = Connection.new("FeedbackReceiver", host, port)
+          certificate = Rapns::Daemon.configuration.certificate
+          connection = Connection.new("FeedbackReceiver", host, port, certificate)
           connection.connect
 
           while tuple = connection.read(FEEDBACK_TUPLE_BYTES)
