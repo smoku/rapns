@@ -30,7 +30,7 @@ module Rapns
         set_variable(:feedback, :port, config)
         set_variable(:feedback, :poll, config, :optional => true, :default => 60)
 
-        set_variable(nil, :certificate, config)
+        set_variable(nil, :certificate, config, :optional => true, :default => "")
         set_variable(nil, :airbrake_notify, config, :optional => true, :default => true)
         set_variable(nil, :certificate_password, config, :optional => true, :default => "")
         set_variable(nil, :pid_file, config, :optional => true, :default => "")

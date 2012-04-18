@@ -44,6 +44,7 @@ module Rapns
       def deliver(notification)
         begin
           connection = connection_for_certificate(notification.certificate)
+          connection.write(notification.to_binary)
           check_for_error(connection)
 
           with_database_reconnect_and_retry do
